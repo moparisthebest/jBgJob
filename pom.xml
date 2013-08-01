@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ jBgJob (Java Background Job) lets you schedule Java jobs to be ran in the background.  They can run in any
+  ~ combination of other threads in the same JVM, other JVMs, or multiple other JVMs, even on different machines.
+  ~ Copyright (C) 2013 Travis Burtrum (moparisthebest)
+  ~
+  ~ This library is free software; you can redistribute it and/or
+  ~ modify it under the terms of the GNU Lesser General Public
+  ~ License as published by the Free Software Foundation; either
+  ~ version 2.1 of the License, or (at your option) any later version.
+  ~
+  ~ This library is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with this library; if not, write to the Free Software
+  ~ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.moparisthebest.jbgjob</groupId>
+    <artifactId>jbgjob</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <name>jbgjob</name>
+    <description>
+        jBgJob (Java Background Job) lets you schedule Java jobs to be ran in the background. They can run in any
+        combination of other threads in the same JVM, other JVMs, or multiple other JVMs, even on different machines.
+    </description>
+    <url>https://github.com/moparisthebest/jBgJob</url>
+    <organization>
+        <name>moparisthebest.com</name>
+        <url>http://www.moparisthebest.com</url>
+    </organization>
+    <developers>
+        <developer>
+            <id>moparisthebest</id>
+            <name>Travis Burtrum</name>
+            <email>admin@moparisthebest.com</email>
+            <url>http://www.moparisthebest.com/</url>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:https://github.com/moparisthebest/jBgJob.git</connection>
+        <developerConnection>scm:git:https://github.com/moparisthebest/jBgJob.git</developerConnection>
+        <url>https://github.com/moparisthebest/jBgJob</url>
+    </scm>
+    <licenses>
+        <license>
+            <name>GNU Lesser General Public License, Version 2.1</name>
+            <url>http://www.gnu.org/licenses/lgpl-2.1.html</url>
+        </license>
+    </licenses>
+    <packaging>pom</packaging>
+    <properties>
+        <maven.test.skip>true</maven.test.skip>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <modules>
+        <module>core</module>
+        <module>threadscheduler</module>
+        <module>redisscheduler</module>
+        <module>redisprocessor</module>
+    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.5</source>
+                    <target>1.5</target>
+                    <debug>false</debug>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <profiles>
+        <profile>
+            <id>run-tests</id>
+            <activation>
+                <property>
+                    <name>maven.test.skip</name>
+                    <value>false</value>
+                </property>
+            </activation>
+        </profile>
+    </profiles>
+</project>

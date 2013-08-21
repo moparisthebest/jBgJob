@@ -113,9 +113,15 @@ public class RedisThread extends RedisScheduler implements Runnable {
 					}
 					timeoutCounter = 0;
 					if (debug) System.out.println("scheduledItemString: " + scheduledItemString);
-					final ScheduledItem scheduledItem = om.readValue(scheduledItemString, ScheduledItem.class);
-					if (debug) System.out.println("scheduledItem object: " + scheduledItem);
-					executor.execute(scheduledItem, getExecutionResult(scheduledItemString));
+					final ExecutionResult executionResult = getExecutionResult(scheduledItemString);
+					try{
+						final ScheduledItem scheduledItem = om.readValue(scheduledItemString, ScheduledItem.class);
+						if (debug) System.out.println("scheduledItem object: " + scheduledItem);
+						executor.execute(scheduledItem, executionResult);
+					}catch(Throwable e){
+						if(executionResult != null)
+							executionResult.error(e);
+					}
 				}
 			} catch (Throwable e) {
 				e.printStackTrace();

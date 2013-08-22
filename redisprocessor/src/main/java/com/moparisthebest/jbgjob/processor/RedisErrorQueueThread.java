@@ -20,6 +20,7 @@
 
 package com.moparisthebest.jbgjob.processor;
 
+import com.moparisthebest.jbgjob.ScheduledItemExecutor;
 import com.moparisthebest.jbgjob.result.ExecutionResult;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -31,38 +32,37 @@ import redis.clients.jedis.JedisPool;
  */
 public class RedisErrorQueueThread extends RedisProcessingQueueThread {
 
-	public static final String defaultErrorQueueSuffix;
-
-	static {
-		final String suffix = System.getProperty("redis.errorQueueSuffix");
-		defaultErrorQueueSuffix = (suffix == null || suffix.isEmpty()) ? "-error" : ("-" + suffix);
-	}
+	public static final String defaultErrorQueueSuffix = defaultIfEmpty(System.getProperty("redis.errorQueueSuffix"), "-error");
 
 	public final String errorQueue;
 
 	public RedisErrorQueueThread() {
-		this(defaultErrorQueueSuffix);
+		this(null, null, null, null, null, null);
 	}
 
-	public RedisErrorQueueThread(String errorQueueSuffix) {
-		this(defaultProcessingQueueSuffix, errorQueueSuffix);
+	public RedisErrorQueueThread(String queue) {
+		this(queue, null, null, null, null, null);
 	}
 
-	public RedisErrorQueueThread(String processingQueueSuffix, String errorQueueSuffix) {
-		this(defaultQueue, processingQueueSuffix, errorQueueSuffix);
+	public RedisErrorQueueThread(String queue, ScheduledItemExecutor executor) {
+		this(queue, executor, null, null, null, null);
 	}
 
-	public RedisErrorQueueThread(String queue, String processingQueueSuffix, String errorQueueSuffix) {
-		this(null, queue, processingQueueSuffix, errorQueueSuffix);
+	public RedisErrorQueueThread(String queue, ScheduledItemExecutor executor, String errorQueueSuffix) {
+		this(queue, executor, errorQueueSuffix, null, null, null);
 	}
 
-	public RedisErrorQueueThread(JedisPool pool, String queue, String processingQueueSuffix, String errorQueueSuffix) {
-		this(defaultQueuePrefix, pool, queue, processingQueueSuffix, errorQueueSuffix);
+	public RedisErrorQueueThread(String queue, ScheduledItemExecutor executor, String errorQueueSuffix, String processingQueueSuffix) {
+		this(queue, executor, errorQueueSuffix, processingQueueSuffix, null, null);
 	}
 
-	public RedisErrorQueueThread(String queuePrefix, JedisPool pool, String queue, String processingQueueSuffix, String errorQueueSuffix) {
-		super(queuePrefix, pool, queue, processingQueueSuffix);
-		this.errorQueue = this.queue + errorQueueSuffix;
+	public RedisErrorQueueThread(String queue, ScheduledItemExecutor executor, String errorQueueSuffix, String processingQueueSuffix, String queuePrefix) {
+		this(queue, executor, errorQueueSuffix, processingQueueSuffix, queuePrefix, null);
+	}
+
+	public RedisErrorQueueThread(String queue, ScheduledItemExecutor executor, String errorQueueSuffix, String processingQueueSuffix, String queuePrefix, JedisPool pool) {
+		super(queue, executor, processingQueueSuffix, queuePrefix, pool);
+		this.errorQueue = this.queue + defaultIfEmpty(errorQueueSuffix, defaultErrorQueueSuffix);
 	}
 
 	protected ExecutionResult getExecutionResult(final String scheduledItemString) {

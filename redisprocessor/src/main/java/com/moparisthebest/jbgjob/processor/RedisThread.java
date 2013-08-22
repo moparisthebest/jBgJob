@@ -58,24 +58,29 @@ public class RedisThread extends RedisScheduler implements Runnable {
 
 	protected final String queue;
 	protected final String shutdownKey;
-	protected final ScheduledItemExecutor executor = new ScheduledItemExecutor();
+	protected final ScheduledItemExecutor executor;
 
 	public RedisThread() {
-		this(AbstractScheduler.defaultQueue);
+		this(null, null, null, null);
 	}
 
 	public RedisThread(String queue) {
-		this(null, queue);
+		this(queue, null, null, null);
 	}
 
-	public RedisThread(JedisPool pool, String queue) {
-		this(defaultQueuePrefix, pool, queue);
+	public RedisThread(String queue, ScheduledItemExecutor executor) {
+		this(queue, executor, null, null);
 	}
 
-	public RedisThread(String queuePrefix, JedisPool pool, String queue) {
+	public RedisThread(String queue, ScheduledItemExecutor executor, String queuePrefix) {
+		this(queue, executor, queuePrefix, null);
+	}
+
+	public RedisThread(String queue, ScheduledItemExecutor executor, String queuePrefix, JedisPool pool) {
 		super(queuePrefix, pool);
-		this.queue = this.queuePrefix + queue;
+		this.queue = this.queuePrefix + defaultIfEmpty(queue, AbstractScheduler.defaultQueue);
 		this.shutdownKey = this.queuePrefix + "shutdown";
+		this.executor = executor != null ? executor : new ScheduledItemExecutor();
 	}
 
 	protected String pollRedis(final Jedis jedis, final int timeout) {

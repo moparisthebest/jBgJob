@@ -36,12 +36,12 @@ public class RedisScheduler extends AbstractScheduler {
 
 	static {
 		String prefix = System.getProperty("redis.queuePrefix");
-		if (prefix == null)
+		if (isEmpty(prefix))
 			try {
-				prefix = java.net.InetAddress.getLocalHost().getHostName();
+				prefix = java.net.InetAddress.getLocalHost().getHostName() + "-";
 			} catch (Throwable e) {
 			}
-		defaultQueuePrefix = (prefix == null || prefix.isEmpty()) ? "" : (prefix + "-");
+		defaultQueuePrefix = defaultIfEmpty(prefix, "");
 	}
 
 	protected final String queuePrefix;
@@ -50,15 +50,19 @@ public class RedisScheduler extends AbstractScheduler {
 	protected final JedisPool pool;
 
 	public RedisScheduler() {
-		this(null);
+		this(null, null);
 	}
 
 	public RedisScheduler(JedisPool pool) {
-		this(defaultQueuePrefix, pool);
+		this(null, pool);
+	}
+
+	public RedisScheduler(String queuePrefix) {
+		this(queuePrefix, null);
 	}
 
 	public RedisScheduler(String queuePrefix, JedisPool pool) {
-		this.queuePrefix = queuePrefix;
+		this.queuePrefix = defaultIfEmpty(queuePrefix, defaultQueuePrefix);
 		this.pool = pool != null ? pool : new JedisPool(new JedisPoolConfig(), System.getProperty("redis.host", "localhost"));
 	}
 

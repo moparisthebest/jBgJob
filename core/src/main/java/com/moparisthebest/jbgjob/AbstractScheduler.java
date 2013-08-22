@@ -22,7 +22,15 @@ package com.moparisthebest.jbgjob;
 
 public abstract class AbstractScheduler implements Scheduler {
 
-	public static final String defaultQueue = System.getProperty("scheduler.default.queue", "default");
+	public static final String defaultQueue = defaultIfEmpty(System.getProperty("scheduler.default.queue"), "default");
+
+	public static boolean isEmpty(final String str){
+		return str == null || str.trim().isEmpty();
+	}
+
+	public static String defaultIfEmpty(final String str, final String def){
+		return isEmpty(str) ? def : str;
+	}
 
 	@Override
 	public <T> boolean schedule(final Class<? extends BackgroundJob<T>> bgClass, final T dto) {

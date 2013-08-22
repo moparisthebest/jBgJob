@@ -49,6 +49,11 @@ public class ScheduledItemExecutor implements Closeable {
 	public ScheduledItemExecutor() {
 		this(true);
 	}
+
+	public ScheduledItemExecutor(final int numThreads) {
+		this(numThreads, true);
+	}
+
 	public ScheduledItemExecutor(final boolean blockAddWhenSaturated) {
 		this(defaultNumThreads, blockAddWhenSaturated);
 	}

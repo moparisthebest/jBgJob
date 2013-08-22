@@ -62,7 +62,7 @@ public class ObjectPool {
 			throw new NullPointerException("Released resource cannot be null!");
 		synchronized (pool) {
 			pool.get(resource.getClass()).push(resource);
-			System.out.println("pool: " + pool);
+			//System.out.println("pool: " + pool);
 		}
 	}
 

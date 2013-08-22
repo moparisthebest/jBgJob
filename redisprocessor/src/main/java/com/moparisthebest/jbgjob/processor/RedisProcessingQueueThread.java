@@ -20,6 +20,7 @@
 
 package com.moparisthebest.jbgjob.processor;
 
+import com.moparisthebest.jbgjob.ScheduledItemExecutor;
 import com.moparisthebest.jbgjob.result.ExecutionResult;
 import com.moparisthebest.jbgjob.result.PrintStackTraceExecutionResult;
 import redis.clients.jedis.Jedis;
@@ -30,34 +31,33 @@ import redis.clients.jedis.JedisPool;
  */
 public class RedisProcessingQueueThread extends RedisThread {
 
-	public static final String defaultProcessingQueueSuffix;
-
-	static {
-		final String suffix = System.getProperty("redis.processingQueueSuffix");
-		defaultProcessingQueueSuffix = (suffix == null || suffix.isEmpty()) ? "-processing" : ("-" + suffix);
-	}
+	public static final String defaultProcessingQueueSuffix = defaultIfEmpty(System.getProperty("redis.processingQueueSuffix"), "-processing");
 
 	public final String processingQueue;
 
 	public RedisProcessingQueueThread() {
-		this(defaultProcessingQueueSuffix);
+		this(null, null, null, null, null);
 	}
 
-	public RedisProcessingQueueThread(String processingQueueSuffix) {
-		this(defaultQueue, processingQueueSuffix);
+	public RedisProcessingQueueThread(String queue) {
+		this(queue, null, null, null, null);
 	}
 
-	public RedisProcessingQueueThread(String queue, String processingQueueSuffix) {
-		this(null, queue, processingQueueSuffix);
+	public RedisProcessingQueueThread(String queue, ScheduledItemExecutor executor) {
+		this(queue, executor, null, null, null);
 	}
 
-	public RedisProcessingQueueThread(JedisPool pool, String queue, String processingQueueSuffix) {
-		this(defaultQueuePrefix, pool, queue, processingQueueSuffix);
+	public RedisProcessingQueueThread(String queue, ScheduledItemExecutor executor, String processingQueueSuffix) {
+		this(queue, executor, processingQueueSuffix, null, null);
 	}
 
-	public RedisProcessingQueueThread(String queuePrefix, JedisPool pool, String queue, String processingQueueSuffix) {
-		super(queuePrefix, pool, queue);
-		this.processingQueue = this.queue + processingQueueSuffix;
+	public RedisProcessingQueueThread(String queue, ScheduledItemExecutor executor, String processingQueueSuffix, String queuePrefix) {
+		this(queue, executor, processingQueueSuffix, queuePrefix, null);
+	}
+
+	public RedisProcessingQueueThread(String queue, ScheduledItemExecutor executor, String processingQueueSuffix, String queuePrefix, JedisPool pool) {
+		super(queue, executor, queuePrefix, pool);
+		this.processingQueue = this.queue + defaultIfEmpty(processingQueueSuffix, defaultProcessingQueueSuffix);
 	}
 
 	@Override

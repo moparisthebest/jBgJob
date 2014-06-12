@@ -28,7 +28,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.moparisthebest.jbgjob</groupId>
     <artifactId>jbgjob</artifactId>
-    <version>0.3.1</version>
+    <version>0.3.2-SNAPSHOT</version>
     <name>jbgjob</name>
     <description>
         jBgJob (Java Background Job) lets you schedule Java jobs to be ran in the background. They can run in any

@@ -57,19 +57,39 @@ public class RedisThread extends RedisScheduler implements Runnable {
 	private int timeoutCounter = 0;
 
 	protected final String queue;
-	protected final String shutdownKey;
+	protected final Stop stop;
 	protected final ScheduledItemExecutor executor;
 
 	public RedisThread() {
-		this(null, null, null, null);
+		this(null, null, (String)null, null);
+	}
+
+	public RedisThread(Stop stop) {
+		this(null, null, null, null, stop);
 	}
 
 	public RedisThread(String queue) {
-		this(queue, null, null, null);
+		this(queue, null, (String)null, null);
+	}
+
+	public RedisThread(String queue, Stop stop) {
+		this(queue, null, null, null, stop);
+	}
+
+	public RedisThread(JedisPool pool, Stop stop) {
+		this(null, null, null, pool, stop);
 	}
 
 	public RedisThread(String queue, ScheduledItemExecutor executor) {
-		this(queue, executor, null, null);
+		this(queue, executor, (String)null, null);
+	}
+
+	public RedisThread(String queue, ScheduledItemExecutor executor, Stop stop) {
+		this(queue, executor, null, null, stop);
+	}
+
+	public RedisThread(String queue, ScheduledItemExecutor executor, JedisPool pool, Stop stop) {
+		this(queue, executor, null, pool, stop);
 	}
 
 	public RedisThread(String queue, ScheduledItemExecutor executor, String queuePrefix) {
@@ -77,10 +97,23 @@ public class RedisThread extends RedisScheduler implements Runnable {
 	}
 
 	public RedisThread(String queue, ScheduledItemExecutor executor, String queuePrefix, JedisPool pool) {
+		this(queue, executor, queuePrefix, pool, null);
+	}
+
+	public RedisThread(String queue, ScheduledItemExecutor executor, String queuePrefix, JedisPool pool, Stop stop) {
 		super(queuePrefix, pool);
 		this.queue = this.queuePrefix + defaultIfEmpty(queue, AbstractScheduler.defaultQueue);
-		this.shutdownKey = this.queuePrefix + "shutdown";
 		this.executor = executor != null ? executor : new ScheduledItemExecutor();
+
+		if(stop == null){
+			final String shutdownKey = this.queuePrefix + "shutdown";
+			stop = new Stop(){
+				public boolean stop(final Jedis jedis){
+					return "shutdown".equals(jedis.get(shutdownKey));
+				}
+			};
+		}
+		this.stop = stop;
 	}
 
 	protected String pollRedis(final Jedis jedis, final int timeout) {
@@ -96,7 +129,6 @@ public class RedisThread extends RedisScheduler implements Runnable {
 		return noop;
 	}
 
-	@Override
 	public final void run() {
 		Jedis jedis = null;
 		outer:
@@ -106,7 +138,7 @@ public class RedisThread extends RedisScheduler implements Runnable {
 				while (true) {
 					if (debug && maxTimeoutsBeforeClose > 0) System.out.printf("maxTimeoutsBeforeClose: %d timeoutCounter: %d\n", maxTimeoutsBeforeClose, timeoutCounter);
 					// check to see if we should shutdown
-					if ("shutdown".equals(jedis.get(this.shutdownKey)))
+					if (this.stop.stop(jedis))
 						break outer;
 					// grab an item, if it's null (probably timed out) try again
 					final String scheduledItemString = pollRedis(jedis, defaultTimeout);
@@ -174,5 +206,9 @@ public class RedisThread extends RedisScheduler implements Runnable {
 	public static void main(String[] args) {
 		// set all needed arguments with system properties
 		new RedisThread().run();
+	}
+
+	public interface Stop {
+		public boolean stop(final Jedis jedis);
 	}
 }

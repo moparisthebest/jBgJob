@@ -38,13 +38,30 @@ public class RedisProcessingQueueThread extends RedisThread {
 	public RedisProcessingQueueThread() {
 		this(null, null, null, null, null);
 	}
+	public RedisProcessingQueueThread(Stop stop) {
+		this(null, null, null, null, null, stop);
+	}
 
 	public RedisProcessingQueueThread(String queue) {
 		this(queue, null, null, null, null);
 	}
+	public RedisProcessingQueueThread(String queue, Stop stop) {
+		this(queue, null, null, null, null, stop);
+	}
+
+	public RedisProcessingQueueThread(JedisPool pool, Stop stop) {
+		this(null, null, null, null, pool, stop);
+	}
 
 	public RedisProcessingQueueThread(String queue, ScheduledItemExecutor executor) {
 		this(queue, executor, null, null, null);
+	}
+
+	public RedisProcessingQueueThread(String queue, ScheduledItemExecutor executor, Stop stop) {
+		this(queue, executor, null, null, null, stop);
+	}
+	public RedisProcessingQueueThread(String queue, ScheduledItemExecutor executor, JedisPool pool, Stop stop) {
+		this(queue, executor, null, null, pool, stop);
 	}
 
 	public RedisProcessingQueueThread(String queue, ScheduledItemExecutor executor, String processingQueueSuffix) {
@@ -56,7 +73,11 @@ public class RedisProcessingQueueThread extends RedisThread {
 	}
 
 	public RedisProcessingQueueThread(String queue, ScheduledItemExecutor executor, String processingQueueSuffix, String queuePrefix, JedisPool pool) {
-		super(queue, executor, queuePrefix, pool);
+		this(queue, executor, processingQueueSuffix, queuePrefix, pool, null);
+	}
+
+	public RedisProcessingQueueThread(String queue, ScheduledItemExecutor executor, String processingQueueSuffix, String queuePrefix, JedisPool pool, Stop stop) {
+		super(queue, executor, queuePrefix, pool, stop);
 		this.processingQueue = this.queue + defaultIfEmpty(processingQueueSuffix, defaultProcessingQueueSuffix);
 	}
 

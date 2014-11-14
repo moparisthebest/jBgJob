@@ -20,6 +20,7 @@
 
 package com.moparisthebest.jbgjob.processor;
 
+import com.moparisthebest.jbgjob.ScheduledItem;
 import com.moparisthebest.jbgjob.ScheduledItemExecutor;
 import com.moparisthebest.jbgjob.result.ExecutionResult;
 import redis.clients.jedis.Jedis;
@@ -105,8 +106,14 @@ public class RedisErrorQueueThread extends RedisProcessingQueueThread {
 			Jedis jedis = null;
 			try {
 				jedis = pool.getResource();
+				ScheduledItem scheduledItem = null;
+				try {
+					scheduledItem = om.readValue(scheduledItemString, ScheduledItem.class);
+				} catch(Throwable e1) {
+					// ignore, it'll just stay null
+				}
 				// push to error queue
-				final String error = om.writeValueAsString(new ScheduledItemError(e, scheduledItemString));
+				final String error = om.writeValueAsString(new ScheduledItemError(e, scheduledItemString, scheduledItem));
 				if (debug) System.out.printf("redis>  LPUSH %s \"%s\"\n", errorQueue, error);
 				jedis.lpush(errorQueue, error);
 				// remove from processing queue

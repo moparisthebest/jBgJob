@@ -20,22 +20,36 @@
 
 package com.moparisthebest.jbgjob.processor;
 
+import com.moparisthebest.jbgjob.ScheduledItem;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
 /**
- * Represents an Exception and a serialized ScheduledItem to put in the Redis error queue
+ * Represents an Exception, the serialized ScheduledItem from Redis, and the attempt to parse it into a ScheduledItem, to put in the Redis error queue
  */
 public class ScheduledItemError {
 	private final long date = System.currentTimeMillis();
 	private final String exception;
 	private final String scheduledItemString;
+	private final ScheduledItem scheduledItem;
 
-	public ScheduledItemError(final Throwable e, final String scheduledItemString) {
+	public ScheduledItemError() {
+		this.exception = null;
+		this.scheduledItemString = null;
+		this.scheduledItem = null;
+	}
+
+	public ScheduledItemError(final Throwable e, final String scheduledItemString, final ScheduledItem scheduledItem) {
 		this.scheduledItemString = scheduledItemString;
-		final StringWriter sw = new StringWriter();
-		e.printStackTrace(new PrintWriter(sw));
-		this.exception = sw.toString();
+		this.scheduledItem = scheduledItem;
+		if(e == null) {
+			this.exception = null;
+		} else {
+			final StringWriter sw = new StringWriter();
+			e.printStackTrace(new PrintWriter(sw));
+			this.exception = sw.toString();
+		}
 	}
 
 	public long getDate() {
@@ -50,12 +64,17 @@ public class ScheduledItemError {
 		return scheduledItemString;
 	}
 
+	public ScheduledItem getScheduledItem() {
+		return scheduledItem;
+	}
+
 	@Override
 	public String toString() {
 		return "ScheduledItemError{" +
 				"date=" + date +
 				", exception='" + exception + '\'' +
 				", scheduledItemString='" + scheduledItemString + '\'' +
-				"} " + super.toString();
+				", scheduledItem=" + scheduledItem +
+				'}';
 	}
 }

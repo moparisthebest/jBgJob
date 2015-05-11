@@ -42,6 +42,11 @@ public class ThreadScheduler extends AbstractScheduler {
 	}
 
 	@Override
+	public <T> T testSerialization(final T t) {
+		return t; // do nothing here
+	}
+
+	@Override
 	public void close() {
 		super.close();
 		executor.close();

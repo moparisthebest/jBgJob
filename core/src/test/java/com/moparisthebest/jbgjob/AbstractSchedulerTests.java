@@ -27,6 +27,9 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
+
 public class AbstractSchedulerTests {
 	public static Scheduler bg;
 
@@ -60,5 +63,25 @@ public class AbstractSchedulerTests {
 		Thread.sleep(5000);
 		for (; x < 20; ++x)
 			Assert.assertTrue(bg.schedule(PrintingJob.class, new PrintDTO("fastJob " + x)));
+	}
+
+	@Test
+	public void testSerializationSingleton() throws Throwable {
+		Assert.assertEquals(Collections.singleton(5), bg.testSerialization(Collections.singleton(5)));
+	}
+
+	@Test
+	public void testSerializationSingletonMap() throws Throwable {
+		Assert.assertEquals(Collections.singletonMap("5", 5), bg.testSerialization(Collections.singletonMap("5", 5)));
+	}
+
+	@Test
+	public void testSerializationSingletonList() throws Throwable {
+		Assert.assertEquals(Collections.singletonList(5), bg.testSerialization(Collections.singletonList(5)));
+	}
+
+	@Test
+	public void testSerializationAsList() throws Throwable {
+		Assert.assertEquals(Arrays.asList(2, 3, 4, 5), bg.testSerialization(Arrays.asList(2, 3, 4, 5)));
 	}
 }

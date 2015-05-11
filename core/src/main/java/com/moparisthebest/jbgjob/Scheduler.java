@@ -49,4 +49,13 @@ public interface Scheduler extends Closeable {
 	public <T> boolean schedule(final String queue, final Class<? extends BackgroundJob<T>> bgClass, final T dto);
 
 	public <T> boolean schedule(final String queue, final ScheduledItem<T> scheduledItem);
+
+	/**
+	 * This serializes and deserialized T and returns the deserialized version for the calling app to compare is correct
+	 * @param t to be serialized
+	 * @param <T> Type of DTO
+	 * @return t serialized and deserialized
+	 * @throws Exception
+	 */
+	public <T> T testSerialization(final T t) throws Exception;
 }

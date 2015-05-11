@@ -38,6 +38,10 @@ public class ScheduledItem<T> implements Runnable {
 		this(null, null);
 	}
 
+	public ScheduledItem(T dto) {
+		this(null, dto);
+	}
+
 	public ScheduledItem(Class<? extends BackgroundJob<T>> bgClass, T dto) {
 		this.bgClass = bgClass;
 		this.dto = dto;
@@ -70,6 +74,10 @@ public class ScheduledItem<T> implements Runnable {
 
 	public void setResult(ExecutionResult result) {
 		this.result = result;
+	}
+
+	public T getDto() {
+		return dto;
 	}
 
 	@Override

@@ -20,10 +20,15 @@
 
 package com.moparisthebest.jbgjob;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * This implementation of Scheduler that serializes the DTO into a redis list for processing elsewhere.
@@ -34,6 +39,8 @@ public class RedisScheduler extends AbstractScheduler {
 
 	public static final String defaultQueuePrefix;
 
+	public static final Module redisModule;
+
 	static {
 		String prefix = System.getProperty("redis.queuePrefix");
 		if (isEmpty(prefix))
@@ -42,11 +49,47 @@ public class RedisScheduler extends AbstractScheduler {
 			} catch (Throwable e) {
 			}
 		defaultQueuePrefix = defaultIfEmpty(prefix, "");
+
+		@SuppressWarnings({"unchecked"})
+		final Class<Set> singleton = (Class<Set>) Collections.singleton(5L).getClass();
+		@SuppressWarnings({"unchecked"})
+		final Class<Map> singletonMap = (Class<Map>) Collections.singletonMap(5L, 5L).getClass();
+		@SuppressWarnings({"unchecked"})
+		final Class<List> singletonList = (Class<List>) Collections.singletonList(5L).getClass();
+		@SuppressWarnings({"unchecked"})
+		final Class<List> asList = (Class<List>) Arrays.asList(5L).getClass();
+
+		redisModule = new SimpleModule("OrderedMap", new Version(1, 0, 0, null, null, null)).addDeserializer(
+				singleton, new JsonDeserializer<Set>() {
+					@Override
+					public Set deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+						return Collections.singleton(jp.getCodec().readValue(jp, Object[].class)[0]);
+					}
+				}).addDeserializer(
+				singletonMap, new JsonDeserializer<Map>() {
+					@Override
+					public Map deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+						final Map.Entry entry = (Map.Entry) jp.getCodec().readValue(jp, HashMap.class).entrySet().iterator().next();
+						return Collections.singletonMap(entry.getKey(), entry.getValue());
+					}
+				}).addDeserializer(
+				singletonList, new JsonDeserializer<List>() {
+					@Override
+					public List deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+						return Collections.singletonList(jp.getCodec().readValue(jp, Object[].class)[0]);
+					}
+				}).addDeserializer(
+				asList, new JsonDeserializer<List>() {
+					@Override
+					public List deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+						return Arrays.asList(jp.getCodec().readValue(jp, Object[].class));
+					}
+				});
 	}
 
 	protected final String queuePrefix;
 
-	protected final ObjectMapper om = new ObjectMapper().enableDefaultTyping();
+	protected final ObjectMapper om = new ObjectMapper().enableDefaultTyping().registerModule(redisModule);
 	protected final JedisPool pool;
 
 	public RedisScheduler() {
@@ -86,5 +129,22 @@ public class RedisScheduler extends AbstractScheduler {
 					e.printStackTrace();
 				}
 		}
+	}
+
+	@Override
+	@SuppressWarnings({"unchecked"})
+	public <T> T testSerialization(final T t) throws IOException {
+		final String singleton = om.writeValueAsString(new ScheduledItem<T>(null, t));
+		System.out.printf("singleton: '%s', dto.getClass: '%s'", singleton, t.getClass());
+		final ScheduledItem<T> singletonCol = (ScheduledItem<T>) om.readValue(singleton, ScheduledItem.class);
+		System.out.printf(", singletonCol: '%s', dto.getClass: '%s'", singletonCol, singletonCol.getDto().getClass());
+		if (singletonCol.getDto() instanceof Collection)
+			for (Object ob : ((Collection) singletonCol.getDto()))
+				System.out.printf(", val: '%s', val.getClass: '%s'", ob, ob.getClass());
+		else if (singletonCol.getDto() instanceof Map)
+			for (Map.Entry entry : (Set<Map.Entry>) ((Map) singletonCol.getDto()).entrySet())
+				System.out.printf(", key: '%s', key.getClass: '%s', val: '%s', val.getClass: '%s'", entry.getKey(), entry.getKey().getClass(), entry.getValue(), entry.getValue().getClass());
+		System.out.println();
+		return singletonCol.getDto();
 	}
 }

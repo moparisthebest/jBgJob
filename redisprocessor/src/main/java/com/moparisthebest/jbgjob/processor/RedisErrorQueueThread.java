@@ -86,7 +86,11 @@ public class RedisErrorQueueThread extends RedisProcessingQueueThread {
 	}
 
 	public RedisErrorQueueThread(String queue, ScheduledItemExecutor executor, String errorQueueSuffix, String processingQueueSuffix, String queuePrefix, JedisPool pool, Stop stop) {
-		super(queue, executor, processingQueueSuffix, queuePrefix, pool, stop);
+		this(queue, executor, errorQueueSuffix, processingQueueSuffix, queuePrefix, pool, stop, null);
+	}
+
+	public RedisErrorQueueThread(String queue, ScheduledItemExecutor executor, String errorQueueSuffix, String processingQueueSuffix, String queuePrefix, JedisPool pool, Stop stop, Iterable<String> noWaitQueues) {
+		super(queue, executor, processingQueueSuffix, queuePrefix, pool, stop, noWaitQueues);
 		this.errorQueue = this.queue + defaultIfEmpty(errorQueueSuffix, defaultErrorQueueSuffix);
 	}
 

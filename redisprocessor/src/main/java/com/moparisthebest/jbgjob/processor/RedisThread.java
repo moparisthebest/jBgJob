@@ -29,6 +29,7 @@ import com.moparisthebest.jbgjob.result.PrintStackTraceExecutionResult;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -59,6 +60,7 @@ public class RedisThread extends RedisScheduler implements Runnable {
 	protected final String queue;
 	protected final Stop stop;
 	protected final ScheduledItemExecutor executor;
+	protected final Iterable<String> noWaitQueues;
 
 	public RedisThread() {
 		this(null, null, (String)null, null);
@@ -101,9 +103,23 @@ public class RedisThread extends RedisScheduler implements Runnable {
 	}
 
 	public RedisThread(String queue, ScheduledItemExecutor executor, String queuePrefix, JedisPool pool, Stop stop) {
+		this(queue, executor, queuePrefix, pool, stop, null);
+	}
+
+	public RedisThread(String queue, ScheduledItemExecutor executor, String queuePrefix, JedisPool pool, Stop stop, Iterable<String> noWaitQueues) {
 		super(queuePrefix, pool);
 		this.queue = this.queuePrefix + defaultIfEmpty(queue, AbstractScheduler.defaultQueue);
 		this.executor = executor != null ? executor : new ScheduledItemExecutor();
+
+		List<String> nwq = null;
+		if(noWaitQueues != null) {
+			nwq = new ArrayList<String>();
+			for(final String q : noWaitQueues)
+				nwq.add(this.queuePrefix + q);
+			if(nwq.isEmpty())
+				nwq = null;
+		}
+		this.noWaitQueues = nwq;
 
 		if(stop == null){
 			final String shutdownKey = this.queuePrefix + "shutdown";
@@ -116,11 +132,28 @@ public class RedisThread extends RedisScheduler implements Runnable {
 		this.stop = stop;
 	}
 
-	protected String pollRedis(final Jedis jedis, final int timeout) {
+	protected String pollRedisNoWait(final Jedis jedis, final String queueName) {
+		if (debug) System.out.printf("redis>  RPOP %s\n", queueName);
+		return jedis.rpop(queueName);
+	}
+
+	protected String pollRedisBlock(final Jedis jedis, final int timeout) {
 		if (debug) System.out.printf("redis>  BRPOP %s %d\n", queue, timeout);
 		final List<String> items = jedis.brpop(timeout, queue);
 		//System.out.println("items: " + items);
 		return (items == null || items.size() < 2) ? null : items.get(1);
+	}
+
+	protected String pollRedis(final Jedis jedis, final int timeout) {
+		String ret = pollRedisBlock(jedis, timeout);
+		if(ret != null || noWaitQueues == null)
+			return ret;
+		for(final String queueName : noWaitQueues) {
+			ret = pollRedisNoWait(jedis, queueName);
+			if(ret != null)
+				return ret;
+		}
+		return null;
 	}
 
 	private static final ExecutionResult noop = new PrintStackTraceExecutionResult();

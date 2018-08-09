@@ -77,12 +77,22 @@ public class RedisProcessingQueueThread extends RedisThread {
 	}
 
 	public RedisProcessingQueueThread(String queue, ScheduledItemExecutor executor, String processingQueueSuffix, String queuePrefix, JedisPool pool, Stop stop) {
-		super(queue, executor, queuePrefix, pool, stop);
+		this(queue, executor, processingQueueSuffix, queuePrefix, pool, stop, null);
+	}
+
+	public RedisProcessingQueueThread(String queue, ScheduledItemExecutor executor, String processingQueueSuffix, String queuePrefix, JedisPool pool, Stop stop, Iterable<String> noWaitQueues) {
+		super(queue, executor, queuePrefix, pool, stop, noWaitQueues);
 		this.processingQueue = this.queue + defaultIfEmpty(processingQueueSuffix, defaultProcessingQueueSuffix);
 	}
 
 	@Override
-	protected String pollRedis(final Jedis jedis, final int timeout) {
+	protected String pollRedisNoWait(final Jedis jedis, final String queueName) {
+		if (debug) System.out.printf("redis>  RPOPLPUSH %s %s\n", queueName, processingQueue);
+		return jedis.rpoplpush(queueName, processingQueue);
+	}
+
+	@Override
+	protected String pollRedisBlock(final Jedis jedis, final int timeout) {
 		if (debug) System.out.printf("redis>  BRPOPLPUSH %s %s %d\n", queue, processingQueue, timeout);
 		return jedis.brpoplpush(queue, processingQueue, timeout);
 	}

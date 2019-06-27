@@ -39,8 +39,6 @@ public class RedisScheduler extends AbstractScheduler {
 
 	public static final String defaultQueuePrefix;
 
-	public static final SimpleModule redisModule;
-
 	static {
 		String prefix = System.getProperty("redis.queuePrefix");
 		if (isEmpty(prefix))
@@ -49,47 +47,11 @@ public class RedisScheduler extends AbstractScheduler {
 			} catch (Throwable e) {
 			}
 		defaultQueuePrefix = defaultIfEmpty(prefix, "");
-
-		@SuppressWarnings({"unchecked"})
-		final Class<Set> singleton = (Class<Set>) Collections.singleton(5L).getClass();
-		@SuppressWarnings({"unchecked"})
-		final Class<Map> singletonMap = (Class<Map>) Collections.singletonMap(5L, 5L).getClass();
-		@SuppressWarnings({"unchecked"})
-		final Class<List> singletonList = (Class<List>) Collections.singletonList(5L).getClass();
-		@SuppressWarnings({"unchecked"})
-		final Class<List> asList = (Class<List>) Arrays.asList(5L).getClass();
-
-		redisModule = new SimpleModule("OrderedMap", new Version(1, 0, 0, null, null, null)).addDeserializer(
-				singleton, new JsonDeserializer<Set>() {
-					@Override
-					public Set deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-						return Collections.singleton(jp.getCodec().readValue(jp, Object[].class)[0]);
-					}
-				}).addDeserializer(
-				singletonMap, new JsonDeserializer<Map>() {
-					@Override
-					public Map deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-						final Map.Entry entry = (Map.Entry) jp.getCodec().readValue(jp, HashMap.class).entrySet().iterator().next();
-						return Collections.singletonMap(entry.getKey(), entry.getValue());
-					}
-				}).addDeserializer(
-				singletonList, new JsonDeserializer<List>() {
-					@Override
-					public List deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-						return Collections.singletonList(jp.getCodec().readValue(jp, Object[].class)[0]);
-					}
-				}).addDeserializer(
-				asList, new JsonDeserializer<List>() {
-					@Override
-					public List deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-						return Arrays.asList(jp.getCodec().readValue(jp, Object[].class));
-					}
-				});
 	}
 
 	protected final String queuePrefix;
 
-	protected final ObjectMapper om = new ObjectMapper().enableDefaultTyping().registerModule(redisModule);
+	protected final ObjectMapper om = new ObjectMapper().enableDefaultTyping();
 	protected final JedisPool pool;
 
 	public RedisScheduler() {

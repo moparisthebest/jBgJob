@@ -38,9 +38,9 @@ public class RedisSchedulerTest extends AbstractSchedulerTests {
 		bg.testSerialization(new JacksonTest(Arrays.asList(new InList(1L))));
 		bg.testSerialization(new JacksonTest(Collections.singletonList(new InList(1L))));
 
-		//bg.testSerialization(new JacksonTest(Collections.singleton(new InList(1L))));
+		bg.testSerialization(new JacksonTest(Collections.singleton(new InList(1L))));
 
-		//bg.testSerialization(new JacksonTestMap(Collections.singletonMap(1L, new InList(1L))));
+		bg.testSerialization(new JacksonTestMap(Collections.singletonMap(1L, new InList(1L))));
 	}
 
 

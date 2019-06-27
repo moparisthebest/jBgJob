@@ -39,7 +39,7 @@ public class RedisScheduler extends AbstractScheduler {
 
 	public static final String defaultQueuePrefix;
 
-	public static final Module redisModule;
+	public static final SimpleModule redisModule;
 
 	static {
 		String prefix = System.getProperty("redis.queuePrefix");

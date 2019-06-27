@@ -21,11 +21,96 @@
 package com.moparisthebest.jbgjob;
 
 import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.util.*;
 
 public class RedisSchedulerTest extends AbstractSchedulerTests {
 
 	@BeforeClass
 	public static void setUp() throws Throwable {
 		bg = new RedisScheduler();
+	}
+
+	@Test
+	public void testSerialization() throws Throwable {
+		bg.testSerialization(new JacksonTest(arrayList(new InList(1L))));
+		bg.testSerialization(new JacksonTest(Arrays.asList(new InList(1L))));
+		bg.testSerialization(new JacksonTest(Collections.singletonList(new InList(1L))));
+
+		//bg.testSerialization(new JacksonTest(Collections.singleton(new InList(1L))));
+
+		//bg.testSerialization(new JacksonTestMap(Collections.singletonMap(1L, new InList(1L))));
+	}
+
+
+	public static <T> List<T> arrayList(T o) {
+		final List<T> ret = new ArrayList<>();
+		ret.add(o);
+		return ret;
+	}
+
+	public static class InList {
+		private Long a;
+
+		public InList(Long a) {
+			this.a = a;
+		}
+
+		public InList() {
+		}
+
+		public Long getA() {
+			return a;
+		}
+
+		public void setA(final Long a) {
+			this.a = a;
+		}
+
+		@Override
+		public String toString() {
+			return "InList{" +
+					"a=" + a +
+					'}';
+		}
+	}
+
+	public static class JacksonTest {
+		public final Collection<InList> inLists;
+
+		public JacksonTest() {
+			this(null);
+		}
+
+		public JacksonTest(final Collection<InList> inLists) {
+			this.inLists = inLists;
+		}
+
+		@Override
+		public String toString() {
+			return "JacksonTest{" +
+					"inLists=" + inLists +
+					'}';
+		}
+	}
+
+	public static class JacksonTestMap {
+		public final Map<Long, InList> inLists;
+
+		public JacksonTestMap() {
+			this(null);
+		}
+
+		public JacksonTestMap(final Map<Long, InList> inLists) {
+			this.inLists = inLists;
+		}
+
+		@Override
+		public String toString() {
+			return "JacksonTestMap{" +
+					"inLists=" + inLists +
+					'}';
+		}
 	}
 }
